@@ -118,7 +118,7 @@ public class ClientHandler
 
     private static string UpdateLine(List<LineInfo> data, LineInfo updatedLine)
     {
-        var idx = data.FindIndex(l => l.Name == updatedLine.Name);
+        var idx = data.FindIndex(l => l.Id == updatedLine.Id);
         if (idx >= 0)
         {
             data[idx] = updatedLine;
@@ -129,7 +129,7 @@ public class ClientHandler
 
     private static string DeleteLine(List<LineInfo> data, LineInfo delLine)
     {
-        var idx = data.FindIndex(l => l.Name == delLine.Name);
+        var idx = data.FindIndex(l => l.Id == delLine.Id);
         if (idx >= 0)
         {
             data.RemoveAt(idx);
