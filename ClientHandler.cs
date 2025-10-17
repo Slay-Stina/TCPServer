@@ -85,8 +85,8 @@ public class ClientHandler
             return message switch
             {
                 var m when m.StartsWith("GET_ALL_LINES") => JsonSerializer.Serialize(data),
-                var m when m.StartsWith("GET_LINE_BY_NAME") =>
-                    data.FirstOrDefault(l => l.Name == m[16..]) is LineInfo lineByName
+                var m when m.StartsWith("GET_LINE_BY_ID") =>
+                    data.FirstOrDefault(l => l.Id.ToString() == m[14..]) is LineInfo lineByName
                         ? JsonSerializer.Serialize(lineByName)
                         : "",
                 var m when m.StartsWith("ADD_LINE") =>
