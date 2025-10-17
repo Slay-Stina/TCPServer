@@ -7,5 +7,4 @@ public class LineInfo
     public string IpAddress { get; set; } = string.Empty;
     public int Portnumber { get; set; }
     public bool IsDefault { get; set; }
-    public bool IsSelected { get; set; }
 }
