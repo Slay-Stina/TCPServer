@@ -102,8 +102,8 @@ public class ClientHandler
                         ? JsonSerializer.Serialize(lineByDefault)
                         : "",
                 var m when m.StartsWith("DELETE_LINE") =>
-                    JsonSerializer.Deserialize<LineInfo>(m[11..]) is LineInfo delLine
-                        ? DeleteLine(data, delLine)
+                    JsonSerializer.Deserialize<Guid>(m[11..]) is Guid delLineId
+                        ? DeleteLine(data, delLineId)
                         : "FAIL",
                 _ => "UNKNOWN_COMMAND"
             };
@@ -152,9 +152,9 @@ public class ClientHandler
         return "FAIL";
     }
 
-    private static string DeleteLine(List<LineInfo> data, LineInfo delLine)
+    private static string DeleteLine(List<LineInfo> data, Guid delLineId)
     {
-        var idx = data.FindIndex(l => l.Id == delLine.Id);
+        var idx = data.FindIndex(l => l.Id == delLineId);
         if (idx >= 0)
         {
             bool wasDefault = data[idx].IsDefault;
