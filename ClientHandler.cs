@@ -116,13 +116,18 @@ public class ClientHandler
 
     private static string AddLine(List<LineInfo> data, LineInfo line)
     {
+        // Always assign a new unique Id for the added line to avoid using an empty or client-provided Id
+        line.Id = Guid.NewGuid();
+        while (data.Any(l => l.Id == line.Id))
+            line.Id = Guid.NewGuid();
+
         // If the added line is marked as default, unset other defaults
         if (line.IsDefault)
         {
             foreach (var l in data)
                 l.IsDefault = false;
         }
-        // If no line is default after adding, ensure one default exists
+        // Add the line to the data
         data.Add(line);
         if (!data.Any(l => l.IsDefault) && data.Count > 0)
             data[0].IsDefault = true;
