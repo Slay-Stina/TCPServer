@@ -65,7 +65,7 @@ public class DummyDatabase
     private List<LineInfo> GenerateRandomLines()
     {
         var list = new List<LineInfo>();
-        int lineCount = _random.Next(2, 6); // 2-5 lines
+        int lineCount = _random.Next(4, 11); // 4-10 lines
         int selectedIdx = lineCount > 0 ? _random.Next(0, lineCount) : -1;
         for (int j = 0; j < lineCount; j++)
         {
