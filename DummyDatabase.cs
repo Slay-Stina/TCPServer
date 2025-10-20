@@ -24,6 +24,7 @@ public class DummyDatabase
         {
             var lines = File.ReadAllText(_linesPath);
             _lines = JsonSerializer.Deserialize<List<LineInfo>>(lines) ?? GenerateRandomLines();
+            NormalizeDefault(_lines);
         }
         else
         {
@@ -66,7 +67,7 @@ public class DummyDatabase
     {
         var list = new List<LineInfo>();
         int lineCount = _random.Next(4, 11); // 4-10 lines
-        int selectedIdx = lineCount > 0 ? _random.Next(0, lineCount) : -1;
+        int defaultIdx = lineCount > 0 ? _random.Next(0, lineCount) : -1;
         for (int j = 0; j < lineCount; j++)
         {
             var line = new LineInfo
@@ -74,12 +75,31 @@ public class DummyDatabase
                 Name = $"Line_{j + 1}_{Guid.NewGuid().ToString()[..4]}",
                 IpAddress = $"192.168.1.{j + 10}",
                 Portnumber = 1000 + _random.Next(0, 9000),
-                IsDefault = false,
-                IsSelected = j == selectedIdx
+                IsDefault = j == defaultIdx
             };
             list.Add(line);
         }
         return list;
+    }
+
+    private static void NormalizeDefault(List<LineInfo> lines)
+    {
+        if (lines == null || lines.Count == 0)
+            return;
+
+        // Keep the first IsDefault if any; otherwise set the first line as default
+        int firstDefault = lines.FindIndex(l => l.IsDefault);
+        if (firstDefault == -1)
+        {
+            lines[0].IsDefault = true;
+            for (int i = 1; i < lines.Count; i++)
+                lines[i].IsDefault = false;
+        }
+        else
+        {
+            for (int i = 0; i < lines.Count; i++)
+                lines[i].IsDefault = (i == firstDefault);
+        }
     }
 
     public void Save()
