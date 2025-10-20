@@ -102,7 +102,7 @@ public class ClientHandler
                         ? JsonSerializer.Serialize(lineByDefault)
                         : "",
                 var m when m.StartsWith("DELETE_LINE") =>
-                    JsonSerializer.Deserialize<Guid>(m[11..]) is Guid delLineId
+                    Guid.TryParseExact(m[11..], "D", out Guid delLineId)
                         ? DeleteLine(data, delLineId)
                         : "FAIL",
                 _ => "UNKNOWN_COMMAND"
