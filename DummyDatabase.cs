@@ -17,6 +17,94 @@ public class DummyDatabase
     }
 
     public List<LineInfo> GetData() => _lines;
+    public List<User> GetUsers() => _users;
+    public User? GetUserById(Guid id) => _users.FirstOrDefault(u => u.Id == id);
+
+    public string AddUser(User user)
+    {
+        user.Id = Guid.NewGuid();
+        if (_users.Any(u => u.Id == user.Id))
+            user.Id = Guid.NewGuid();
+        _users.Add(user);
+        Save();
+        return "OK";
+    }
+
+    public string UpdateUser(User updatedUser)
+    {
+        var idx = _users.FindIndex(u => u.Id == updatedUser.Id);
+        if (idx >= 0)
+        {
+            _users[idx] = updatedUser;
+            Save();
+            return "OK";
+        }
+        return "FAIL";
+    }
+
+    public string DeleteUser(Guid userId)
+    {
+        var idx = _users.FindIndex(u => u.Id == userId);
+        if (idx >= 0)
+        {
+            _users.RemoveAt(idx);
+            Save();
+            return "OK";
+        }
+        return "FAIL";
+    }
+
+    public string AddLine(LineInfo line)
+    {
+        line.Id = Guid.NewGuid();
+        while (_lines.Any(l => l.Id == line.Id))
+            line.Id = Guid.NewGuid();
+        if (line.IsDefault)
+        {
+            foreach (var l in _lines)
+                l.IsDefault = false;
+        }
+        _lines.Add(line);
+        if (!_lines.Any(l => l.IsDefault) && _lines.Count > 0)
+            _lines[0].IsDefault = true;
+        Save();
+        return "OK";
+    }
+    public string UpdateLine(LineInfo updatedLine)
+    {
+        var idx = _lines.FindIndex(l => l.Id == updatedLine.Id);
+        if (idx >= 0)
+        {
+            if (updatedLine.IsDefault)
+            {
+                for (int i = 0; i < _lines.Count; i++)
+                {
+                    if (_lines[i].Id != updatedLine.Id)
+                        _lines[i].IsDefault = false;
+                }
+            }
+            _lines[idx] = updatedLine;
+            if (!_lines.Any(l => l.IsDefault) && _lines.Count > 0)
+                _lines[0].IsDefault = true;
+            Save();
+            return "OK";
+        }
+        return "FAIL";
+    }
+    public string DeleteLine(Guid delLineId)
+    {
+        var idx = _lines.FindIndex(l => l.Id == delLineId);
+        if (idx >= 0)
+        {
+            bool wasDefault = _lines[idx].IsDefault;
+            _lines.RemoveAt(idx);
+            if (wasDefault && _lines.Count > 0 && !_lines.Any(l => l.IsDefault))
+                _lines[0].IsDefault = true;
+            Save();
+            return "OK";
+        }
+        return "FAIL";
+    }
 
     private void Load()
     {
@@ -53,7 +141,7 @@ public class DummyDatabase
         {
             var user = new User
             {
-                UserId = Guid.NewGuid(),
+                Id = Guid.NewGuid(),
                 UserName = names[_random.Next(names.Length)] + _random.Next(100, 999),
                 Password = Guid.NewGuid().ToString("N")[..8],
                 AuthLevel = authLevels[_random.Next(authLevels.Length)]

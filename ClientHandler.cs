@@ -82,6 +82,7 @@ public class ClientHandler
         try
         {
             var data = _db.GetData();
+            var users = _db.GetUsers();
             return message switch
             {
                 var m when m.StartsWith("GET_ALL_LINES") => JsonSerializer.Serialize(data),
@@ -91,11 +92,11 @@ public class ClientHandler
                         : "",
                 var m when m.StartsWith("ADD_LINE") =>
                     JsonSerializer.Deserialize<LineInfo>(m[8..]) is LineInfo addLine
-                        ? AddLine(data, addLine)
+                        ? _db.AddLine(addLine)
                         : "FAIL",
                 var m when m.StartsWith("UPDATE_LINE") =>
                     JsonSerializer.Deserialize<LineInfo>(m[11..]) is LineInfo updatedLine
-                        ? UpdateLine(data, updatedLine)
+                        ? _db.UpdateLine(updatedLine)
                         : "FAIL",
                 var m when m.StartsWith("GET_DEFAULT") =>
                     data.FirstOrDefault(l => l.IsDefault) is LineInfo lineByDefault
@@ -103,7 +104,25 @@ public class ClientHandler
                         : "",
                 var m when m.StartsWith("DELETE_LINE") =>
                     Guid.TryParseExact(m[11..], "D", out Guid delLineId)
-                        ? DeleteLine(data, delLineId)
+                        ? _db.DeleteLine(delLineId)
+                        : "FAIL",
+                // User commands
+                var m when m.StartsWith("GET_ALL_USERS") => JsonSerializer.Serialize(users),
+                var m when m.StartsWith("GET_USER_BY_ID") =>
+                    Guid.TryParseExact(m[14..], "D", out Guid userId) && _db.GetUserById(userId) is User userById
+                        ? JsonSerializer.Serialize(userById)
+                        : "",
+                var m when m.StartsWith("ADD_USER") =>
+                    JsonSerializer.Deserialize<User>(m[8..]) is User addUser
+                        ? _db.AddUser(addUser)
+                        : "FAIL",
+                var m when m.StartsWith("UPDATE_USER") =>
+                    JsonSerializer.Deserialize<User>(m[11..]) is User updatedUser
+                        ? _db.UpdateUser(updatedUser)
+                        : "FAIL",
+                var m when m.StartsWith("DELETE_USER") =>
+                    Guid.TryParseExact(m[11..], "D", out Guid delUserId)
+                        ? _db.DeleteUser(delUserId)
                         : "FAIL",
                 _ => "UNKNOWN_COMMAND"
             };
@@ -112,63 +131,5 @@ public class ClientHandler
         {
             return $"ERROR: {ex.Message}";
         }
-    }
-
-    private static string AddLine(List<LineInfo> data, LineInfo line)
-    {
-        // Always assign a new unique Id for the added line to avoid using an empty or client-provided Id
-        line.Id = Guid.NewGuid();
-        while (data.Any(l => l.Id == line.Id))
-            line.Id = Guid.NewGuid();
-
-        // If the added line is marked as default, unset other defaults
-        if (line.IsDefault)
-        {
-            foreach (var l in data)
-                l.IsDefault = false;
-        }
-        // Add the line to the data
-        data.Add(line);
-        if (!data.Any(l => l.IsDefault) && data.Count > 0)
-            data[0].IsDefault = true;
-        return "OK";
-    }
-
-    private static string UpdateLine(List<LineInfo> data, LineInfo updatedLine)
-    {
-        var idx = data.FindIndex(l => l.Id == updatedLine.Id);
-        if (idx >= 0)
-        {
-            // If updated line is set as default, unset other defaults
-            if (updatedLine.IsDefault)
-            {
-                for (int i = 0; i < data.Count; i++)
-                {
-                    if (data[i].Id != updatedLine.Id)
-                        data[i].IsDefault = false;
-                }
-            }
-            data[idx] = updatedLine;
-            // Ensure at least one default remains
-            if (!data.Any(l => l.IsDefault) && data.Count > 0)
-                data[0].IsDefault = true;
-            return "OK";
-        }
-        return "FAIL";
-    }
-
-    private static string DeleteLine(List<LineInfo> data, Guid delLineId)
-    {
-        var idx = data.FindIndex(l => l.Id == delLineId);
-        if (idx >= 0)
-        {
-            bool wasDefault = data[idx].IsDefault;
-            data.RemoveAt(idx);
-            // If we removed the default line, ensure another becomes default
-            if (wasDefault && data.Count > 0 && !data.Any(l => l.IsDefault))
-                data[0].IsDefault = true;
-            return "OK";
-        }
-        return "FAIL";
     }
 }
